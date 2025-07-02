@@ -54,8 +54,21 @@ case "$cmd" in
         ;;
 
     show)
-        echo "Not implemented yet"
+        tail -n +2 "$DATA_FILE" | while read line; do 
+            echo "$line"
+            read -r date km l price <<< $(echo "$line" | tr ',' '\n')
+            echo "$date"
+            echo "$km"
+            echo "$l"
+            echo "$price"
+        done
         ;;
+    test)
+
+        read -r var1 var2 var3 <<< $(echo "a,b,c" | tr ',' '\n')
+        echo "$var1"
+        echo "$var2"
+        echo "$var3"
 
 esac
 
