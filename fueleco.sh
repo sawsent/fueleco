@@ -1,6 +1,7 @@
 #!/bin/bash
 source ./settings.sh
 source ./helper.sh
+source ./domain.sh
 
 liters="$ARG_NOT_PROVIDED"
 km="$ARG_NOT_PROVIDED"
@@ -31,14 +32,27 @@ done
 # Execute command
 case "$cmd" in
     calc)
-        # Validate
         REQUIRE       "$liters" "$km" on-error: 'Liters and kilometers are mandatory.'
         REQUIRE NOT:0 "$km"           on-error: 'Kilometers can not be 0'
 
-        liters_per_100km=$(echo "scale=$(echo "$DECIMALS + 2" | bc); ($liters / $km) * 100" | bc)
-        liters_per_100km=$(echo "scale=$DECIMALS; $liters_per_100km / 1" | bc)
-        echo "Liters per 100 km: $liters_per_100km"
+        lpkm=$(calculate "$liters" "$km")
+        mpg=$(convert FROM:LPKM TO:MPG "$lpkm")
+
+        echo "Fuel Economy: $lpkm L/100km // $mpg mpg"
         ;;
+
+    add)
+        echo "Not implemented yet"
+        ;;
+
+    avg)
+        echo "Not implemented yet"
+        ;;
+
+    report)
+        echo "Not implemented yet"
+        ;;
+
 esac
 
 

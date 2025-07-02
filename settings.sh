@@ -1,6 +1,6 @@
 # GENERAL
 
 # Precision
-export DECIMALS=2
+export PRECISION=2
 
 

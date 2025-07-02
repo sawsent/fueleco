@@ -2,7 +2,6 @@
 export NOT_PROVIDED="ARG_NOT_PROVIDED"
 export ENABLE_DEBUG="false"
 
-
 # Functions
 DEBUG() {
     if [ "$ENABLE_DEBUG" = "true" ]; then
