@@ -49,7 +49,11 @@ case "$cmd" in
         echo "Not implemented yet"
         ;;
 
-    report)
+    stats)
+        echo "Not implemented yet"
+        ;;
+
+    show)
         echo "Not implemented yet"
         ;;
 
