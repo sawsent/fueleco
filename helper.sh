@@ -13,7 +13,7 @@ DEBUG() {
 
 export -f DEBUG
 REQUIRE() {
-    fail_if_equal_to="$ARG_NOT_PROVIDED"
+    fail_if_equal_to="$NOT_PROVIDED"
     fail="false"
     error_message="A required parameter is missing."
     for arg in $@; do

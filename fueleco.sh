@@ -4,8 +4,14 @@ source "$FUELECO_LOCATION/helper.sh"
 source "$FUELECO_LOCATION/domain.sh"
 source "$FUELECO_LOCATION/io.sh"
 
-liters="$ARG_NOT_PROVIDED"
-km="$ARG_NOT_PROVIDED"
+liters="$NOT_PROVIDED"
+km="$NOT_PROVIDED"
+pl="$NOT_PROVIDED"
+p="$NOT_PROVIDED"
+use_profile_arg="$NOT_PROVIDED"
+date="$(date +%Y:%m:%d)"
+
+STORED_PROFILE=$(get_stored_profile)
 
 # Collect command
 cmd="$1"
@@ -24,11 +30,37 @@ case "$arg" in
         km=$(echo "$km" | bc)
         ;;
 
+    -pl=*)
+        pl="${arg#-pl=}"
+        pl=$(echo "$pl" | bc)
+        ;;
+
+    -p=*)
+        p="${arg#-p=}"
+        p=$(echo "$p" | bc)
+        ;;
+
+    -date=*)
+        date="${arg#-date=}"
+        ;;
+
+    -profile=*)
+        profile_arg="${arg#-profile=}"
+        DEBUG FUELECO "Found profile to use: $profile_arg, overriding existing."
+        ;;
+
     --debug)
         ENABLE_DEBUG="true"
 
 esac
 done
+
+# Get profile to use
+if [ -n "$profile_arg" ]; then
+    profile="$profile_arg"
+else
+    profile="$STORED_PROFILE"
+fi
 
 # Execute command
 case "$cmd" in
@@ -42,11 +74,20 @@ case "$cmd" in
         echo "Fuel Economy: $lpkm L/100km // $mpg mpg"
         ;;
 
+    use:*)
+        formatting="${cmd#use:}"
+        if [ -n "$formatting" ]; then
+            use_profile_arg="$formatting"
+        fi
+        REQUIRE "$use_profile_arg" on-error: "Profile not provided and is mandatory" 
+        ;;
+
     add)
+        REQUIRE "$profile" on-error: 'No profile set. Use -profile, or set profile with `fueleco use _profile_`'
         echo "Not implemented yet"
         ;;
 
-    avg)
+    report)
         echo "Not implemented yet"
         ;;
 
@@ -59,16 +100,18 @@ case "$cmd" in
         KM_HEADER="KM"
         LITERS_HEADER="LITERS"
         PRICE_HEADER="PRICE"
+        PRICE_PER_LITER_HEADER="PRICE/L"
         ECO_HEADER="L/100KM"
         max_date_len=${#DATE_HEADER}
         max_km_len=${#KM_HEADER}
         max_liters_len=${#LITERS_HEADER}
         max_price_len=${#PRICE_HEADER}
+        max_price_per_liter_len=${#PRICE_PER_LITER_HEADER}
         max_eco_len=${#ECO_HEADER}
 
         while read -r line; do 
-            read -r date km l price <<< $(echo "$line" | tr ',' '\n')
-            read -r date_len km_len liters_len price_len <<< $(echo "${#date},${#km},${#l},${#price}" | tr ',' '\n')
+            read -r date km l price price_per_liter <<< $(echo "$line" | tr ',' '\n')
+            read -r date_len km_len liters_len price_len price_per_liter_len <<< $(echo "${#date},${#km},${#l},${#price},${#price_per_liter}" | tr ',' '\n')
 
             if [ "$date_len" -gt "$max_date_len" ]; then
                 max_date_len="$date_len"
@@ -82,6 +125,9 @@ case "$cmd" in
             if [ "$price_len" -gt "$max_price_len" ]; then
                 max_price_len="$price_len"
             fi
+            if [ "$price_per_liter_len" -gt "$max_price_per_liter_len" ]; then
+                max_price_per_liter_len="$price_per_liter_len"
+            fi
             lpkm=$(calculate "$l" "$km")
             lpkm_len="${#lpkm}"
             if [ "$lpkm_len" -gt "$max_eco_len" ]; then
@@ -90,12 +136,12 @@ case "$cmd" in
 
         done < <(tail -n +2 "$DATA_FILE")
 
-        show_formatted "$DATE_HEADER:$max_date_len"  "$KM_HEADER:$max_km_len"  "$LITERS_HEADER:$max_liters_len"  "$PRICE_HEADER:$max_price_len" "$ECO_HEADER:$max_eco_len"
+        show_formatted "$DATE_HEADER:$max_date_len" "$KM_HEADER:$max_km_len" "$LITERS_HEADER:$max_liters_len" "$PRICE_HEADER:$max_price_len" "$PRICE_PER_LITER_HEADER:$max_price_per_liter_len" "$ECO_HEADER:$max_eco_len" 
 
         while read -r line; do 
-            read -r date km l price <<< $(echo "$line" | tr ',' '\n')
+            read -r date km l price price_per_liter <<< $(echo "$line" | tr ',' '\n')
             lpkm=$(calculate "$l" "$km")
-            show_formatted "$date:$max_date_len"  "$km:$max_km_len"  "$l:$max_liters_len"  "$price:$max_price_len" "$lpkm:$max_eco_len"
+            show_formatted "$date:$max_date_len"  "$km:$max_km_len"  "$l:$max_liters_len"  "$price:$max_price_len" "$price_per_liter:$max_price_per_liter_len" "$lpkm:$max_eco_len"
         done < <(tail -n +2 "$DATA_FILE")
 
         ;;

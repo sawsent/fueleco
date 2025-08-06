@@ -1,2 +1,2 @@
-date,km,liters,price
-2923847025,199,34,69
+date,km,liters,price,price_per_liter
+2923847025,199,34,69,1.87
