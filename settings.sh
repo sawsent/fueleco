@@ -1,5 +1,6 @@
 # GENERAL
-export DATA_FILE="$FUELECO_LOCATION/data.csv"
+export DATA_LOCATION="$FUELECO_LOCATION/profiles"
+export PROFILE_FILE="$DATA_LOCATION/.active"
 
 # Precision
 export PRECISION=2

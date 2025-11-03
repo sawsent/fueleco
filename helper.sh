@@ -1,17 +1,7 @@
 # Constants
 export NOT_PROVIDED="ARG_NOT_PROVIDED"
-export ENABLE_DEBUG="false"
 
 # Functions
-DEBUG() {
-    if [ "$ENABLE_DEBUG" = "true" ]; then
-        identifier="$1"
-        shift
-        echo "[$identifier] $@"
-    fi
-}
-
-export -f DEBUG
 REQUIRE() {
     fail_if_equal_to="$NOT_PROVIDED"
     fail="false"
