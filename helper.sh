@@ -30,3 +30,29 @@ REQUIRE() {
 }
 export -f REQUIRE
 
+REQUIRE_ONE_OF() {
+    fail_if_equal_to="$NOT_PROVIDED"
+    fail="true"
+    error_message="A required parameter is missing."
+    for arg in $@; do
+        case "$arg" in 
+            on-error:)
+                shift
+                error_message="$@"
+                break
+                ;;
+            *)
+                if [ "$arg" != "$fail_if_equal_to" ]; then
+                    fail="false"
+                fi
+                ;;
+        esac
+        shift
+    done
+    if [ "$fail" = "true" ]; then
+        echo "$error_message"
+        exit 1
+    fi
+}
+export -f REQUIRE_ONE_OF
+

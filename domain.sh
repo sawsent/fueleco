@@ -1,3 +1,22 @@
+get_prices() {
+    price="$1"
+    price_per_liter="$2"
+    liters="$3"
+    not_provided="$4"
+
+    if [ "$price" != "$not_provided" ]; then
+        price_per_liter="$(echo "scale=2; $price/$liters" | bc)"
+    elif [ "$price_per_liter" != "$not_provided" ]; then
+        price="$(echo "scale=2; $price_per_liter*$liters" | bc)"
+    else
+        price="-"
+        price_per_liter="-"
+    fi
+
+    echo "$price:$price_per_liter"
+}
+
+export -f get_prices
 
 # Calculates L/100km
 # args: 

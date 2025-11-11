@@ -45,6 +45,10 @@ case "$arg" in
         date="${arg#-date=}"
         ;;
 
+    -profile=*)
+        profile="${arg#-profile=}"
+        ;;
+
     --debug)
         LOG_LEVEL="$DEBUG"
 
@@ -78,16 +82,18 @@ case "$cmd" in
         ;;
 
     add)
+
         REQUIRE "$profile" on-error: 'No profile set. Use -profile, or set profile with `fueleco use _profile_`'
         REQUIRE "$liters"  on-error: 'Liters is mandatory use -l=_liters_'
         REQUIRE "$km" on-error: 'KM is mandatory use -km=_km_'
-        REQUIRE "$p" on-error: 'Price is mandatory use -p=_price_'
 
         if [ "$date" = "$NOT_PROVIDED" ]; then
             date="$(date +"%Y/%m/%d")"
         fi
 
-        price_per_liter="$(echo "scale=2; $p / $liters" | bc)"
+        IFS=':' read p price_per_liter <<< "$(get_prices $p $pl $liters $NOT_PROVIDED)"
+
+        DEBUG FUELECO "Extracted prices: price=$p, price_per_liter=$price_per_liter"
 
         add_entry "$profile" "$date" "$km" "$liters" "$p" "$price_per_liter"
         ;;
@@ -145,8 +151,8 @@ case "$cmd" in
             show_formatted "$DATE_HEADER:$max_date_len" "$KM_HEADER:$max_km_len" "$LITERS_HEADER:$max_liters_len" "$PRICE_HEADER:$max_price_len" "$PRICE_PER_LITER_HEADER:$max_price_per_liter_len" "$ECO_HEADER:$max_eco_len" 
 
             while read -r line; do 
-                read -r date km l price price_per_liter <<< $(echo "$line" | tr ',' '\n')
-                lpkm=$(calculate "$l" "$km")
+                read -r date km l price price_per_liter <<< $(echo $line | tr ',' '\n')
+                lpkm=$(calculate $l $km)
                 show_formatted "$date:$max_date_len"  "$km:$max_km_len"  "$l:$max_liters_len"  "$price:$max_price_len" "$price_per_liter:$max_price_per_liter_len" "$lpkm:$max_eco_len"
             done < <(tail -n +2 "$DATA_LOCATION/$profile.csv")
 
@@ -155,8 +161,6 @@ case "$cmd" in
             echo "No profile data found for profile: $profile"
         fi
 
-        ;;
-    test)
         ;;
 
     profile)
@@ -169,8 +173,8 @@ case "$cmd" in
         echo "Profiles:"
         for file in $DATA_LOCATION/*; do
             if [ -f "$file" ]; then
-                name="$(basename "$file" .csv)"
-                if [ "$name" = "$profile" ]; then
+                name=$(basename "$file" .csv)
+                if [ $name = $profile ]; then
                     echo "[X] $name"
                 else
                     echo "[ ] $name"
@@ -187,11 +191,15 @@ case "$cmd" in
             profile_to_delete="$NOT_PROVIDED"
         fi
 
-        REQUIRE "$profile_to_delete" on-error: "Profile not provided. Please use fueleco remove-profile _profile_to_delete_"
+        REQUIRE $profile_to_delete on-error: "Profile not provided. Please use fueleco remove-profile _profile_to_delete_"
 
         DEBUG FUELECO "Deleting profile $profile_to_delete"
 
         delete_profile $profile_to_delete
+        ;;
+
+
+    test)
         ;;
 
     *)
