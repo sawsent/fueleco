@@ -10,7 +10,7 @@ km="$NOT_PROVIDED"
 pl="$NOT_PROVIDED"
 p="$NOT_PROVIDED"
 use_profile_arg="$NOT_PROVIDED"
-date="$(date +%Y:%m:%d)"
+date="$NOT_PROVIDED"
 
 profile="$(get_stored_profile)"
 
@@ -73,11 +73,23 @@ case "$cmd" in
         fi
         REQUIRE "$use_profile_arg" on-error: "Profile not provided and is mandatory" 
         store_profile "$use_profile_arg"
+
+        create_profile_if_doesnt_exist "$use_profile_arg"
         ;;
 
     add)
         REQUIRE "$profile" on-error: 'No profile set. Use -profile, or set profile with `fueleco use _profile_`'
-        echo "Not implemented yet"
+        REQUIRE "$liters"  on-error: 'Liters is mandatory use -l=_liters_'
+        REQUIRE "$km" on-error: 'KM is mandatory use -km=_km_'
+        REQUIRE "$p" on-error: 'Price is mandatory use -p=_price_'
+
+        if [ "$date" = "$NOT_PROVIDED" ]; then
+            date="$(date +"%Y/%m/%d")"
+        fi
+
+        price_per_liter="$(echo "scale=2; $p / $liters" | bc)"
+
+        add_entry "$profile" "$date" "$km" "$liters" "$p" "$price_per_liter"
         ;;
 
     report)
@@ -149,6 +161,41 @@ case "$cmd" in
 
     profile)
         echo "Active profile: $profile"
+        ;;
+
+    profiles)
+        DEBUG FUELECO "Looking for profiles in $DATA_LOCATION"
+
+        echo "Profiles:"
+        for file in $DATA_LOCATION/*; do
+            if [ -f "$file" ]; then
+                name="$(basename "$file" .csv)"
+                if [ "$name" = "$profile" ]; then
+                    echo "[X] $name"
+                else
+                    echo "[ ] $name"
+                fi
+            fi
+        done
+        ;;
+
+    delete-profile)
+
+        if [ -n "$1" ]; then
+            profile_to_delete="$1"
+        else
+            profile_to_delete="$NOT_PROVIDED"
+        fi
+
+        REQUIRE "$profile_to_delete" on-error: "Profile not provided. Please use fueleco remove-profile _profile_to_delete_"
+
+        DEBUG FUELECO "Deleting profile $profile_to_delete"
+
+        delete_profile $profile_to_delete
+        ;;
+
+    *)
+        echo "Command not recognized: $cmd"
 
     esac
 

@@ -5,4 +5,3 @@ export PROFILE_FILE="$DATA_LOCATION/.active"
 # Precision
 export PRECISION=2
 
-

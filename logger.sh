@@ -16,3 +16,13 @@ DEBUG() {
 }
 
 export -f DEBUG
+
+INFO() {
+    if [ "$LOG_LEVEL" -ge "$INFO" ]; then
+        identifier = "$1"
+        shift
+        echo "[INFO] [$identifier] $@"
+    fi
+}
+
+export -f INFO
