@@ -71,18 +71,18 @@ case "$cmd" in
         ;;
 
     use)
-        formatting="$1"
-        if [ -n "$formatting" ]; then
-            use_profile_arg="$formatting"
+        if [ -n "$1" ]; then
+            use_profile_arg="$1"
         fi
         REQUIRE "$use_profile_arg" on-error: "Profile not provided and is mandatory" 
         store_profile "$use_profile_arg"
 
         create_profile_if_doesnt_exist "$use_profile_arg"
+
+        echo "Profile $use_profile_arg is now active."
         ;;
 
     add)
-
         REQUIRE "$profile" on-error: 'No profile set. Use -profile, or set profile with `fueleco use _profile_`'
         REQUIRE "$liters"  on-error: 'Liters is mandatory use -l=_liters_'
         REQUIRE "$km" on-error: 'KM is mandatory use -km=_km_'
@@ -99,10 +99,6 @@ case "$cmd" in
         ;;
 
     stats)
-        #date,km,liters,price,price_per_liter
-        #2025/11/11,501.2,41.35,50,1.878
-        #2025/11/11,501.2,41.35,-,-
-
         REQUIRE "$profile" on-error: "No profile set. Please set an active profile with fueleco use _profile_"
 
         total_entries="0"
@@ -246,10 +242,8 @@ case "$cmd" in
         DEBUG FUELECO "Deleting profile $profile_to_delete"
 
         delete_profile $profile_to_delete
-        ;;
 
-
-    test)
+        echo "Profile $profile_to_delete deleted."
         ;;
 
     *)
