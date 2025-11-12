@@ -98,15 +98,65 @@ case "$cmd" in
         add_entry "$profile" "$date" "$km" "$liters" "$p" "$price_per_liter"
         ;;
 
-    report)
-        echo "Not implemented yet"
-        ;;
-
     stats)
-        echo "Not implemented yet"
+        #date,km,liters,price,price_per_liter
+        #2025/11/11,501.2,41.35,50,1.878
+        #2025/11/11,501.2,41.35,-,-
+
+        REQUIRE "$profile" on-error: "No profile set. Please set an active profile with fueleco use _profile_"
+
+        total_entries="0"
+        total_km="0"
+        total_liters="0"
+
+        money_entries="0"
+        total_money="0"
+        to_count_money_km="0"
+        to_count_money_liters="0"
+
+        if [ -e "$DATA_LOCATION/$profile.csv" ]; then
+            while read -r line; do 
+                read -r date km l price price_per_liter <<< $(echo "$line" | tr ',' '\n')
+
+                total_entries=$(echo $total_entries + 1 | bc)
+
+                total_km=$(echo $total_km + $km | bc)
+                total_liters=$(echo $total_liters + $l | bc)
+
+                if [ "$price" != "-" ]; then
+                    total_money=$(echo $total_money + $price | bc)
+                    to_count_money_km=$(echo $to_count_money_km + $km | bc)
+                    to_count_money_liters=$(echo $to_count_money_liters + $l | bc)
+                    money_entries=$(echo $money_entries + 1 | bc)
+                fi
+
+
+            done < <(tail -n +2 "$DATA_LOCATION/$profile.csv")
+
+            DEBUG FUELECO:STATS "total_km: $total_km / total_liters: $total_liters / total_money: $total_money / money_entries: $money_entries / total_entries: $total_entries"
+
+            avg_lpkm=$(calculate $total_liters $total_km)
+            DEBUG FUELECO:STATS "avg_lpkm: $avg_lpkm"
+
+            avg_ppkm=$(calculate_money_per_km $total_money $to_count_money_km)
+            DEBUG FUELECO:STATS "avg_ppkm: $avg_ppkm"
+
+            echo "Showing stats for profile: $profile"
+            echo "------------------------------------"
+            echo "KM travelled | $total_km"
+            echo "Liters used  | $total_liters"
+            echo "Avg LPKM     | $avg_lpkm"
+            echo "Avg EUR/km   | $avg_ppkm"
+
+
+        else
+            echo "No data for profile $profile"
+        fi
         ;;
 
     show)
+        REQUIRE "$profile" on-error: "No profile set. Please set an active profile with fueleco use _profile"
+
         if [ -e "$DATA_LOCATION/$profile.csv" ]; then
             DATE_HEADER="DATE"
             KM_HEADER="KM"

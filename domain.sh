@@ -18,6 +18,16 @@ get_prices() {
 
 export -f get_prices
 
+calculate_money_per_km() {
+    price="$1"
+    km="$2"
+
+    ppkm=$(echo "scale=4; ($price / $km)" | bc)
+    echo 0$ppkm
+}
+
+export -f calculate_money_per_km
+
 # Calculates L/100km
 # args: 
 #   1. liters
